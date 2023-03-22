@@ -1,0 +1,23 @@
+#!/bin/sh
+# show web page in a dialog with a next step action
+#
+theurl="http://hiyokosaionji.remote.moe/muckyroo/license.html"
+ 
+zenity --text-info --title="Muckyroo Installer" --html --url=$theurl \
+       --checkbox="I read it...and I'm good to go"
+rc=$?
+echo $rc
+case $rc in
+    0)
+        echo "Start some next step"
+	sudo sh ./muckyinst
+    # next step
+    ;;
+    1)
+        echo "Stop installation!"
+	sh ./junkoo2
+    ;;
+   -1)
+        echo "An unexpected error has occurred."
+    ;;
+esac

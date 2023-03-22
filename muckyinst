@@ -1,0 +1,49 @@
+#!/bin/sh
+echo "Welcome to Muckyroo Installer!"
+echo "The installer will download the required files!"
+sudo apt install debootstrap
+
+# Now the partitioning thingy...
+echo "Enter the drive name for root partition (e.g. /dev/sda1):"
+read drive
+sudo mke2fs $drive
+
+# Time to add swap partition!
+echo "Enter the drive for swap partition (e.g. /dev/sda5):"
+read drive2
+sudo mkswap $drive2
+sudo sync
+sudo swapon $drive2
+
+# Entering debootstrap
+sudo mkdir /mnt/debinst
+sudo mount $drive /mnt/debinst
+sudo /usr/sbin/debootstrap --arch amd64 sid \
+     /mnt/debinst http://ftp.us.debian.org/debian
+sudo LANG=C.UTF-8 chroot /mnt/debinst /bin/bash
+export TERM=xterm-color
+apt install makedev
+mount none /proc -t proc
+cd /dev
+MAKEDEV generic
+
+# Partition Table
+echo "# /etc/fstab: static file system information.
+#
+# file system    mount point   type    options                  dump pass" >> /etc/fstab
+echo "Adding root partition"
+echo "$drive         /             ext3    defaults                 0    1"
+echo "/dev/sda3        /boot         ext3    ro,nosuid,nodev          0    2
+
+$drive2        none          swap    sw                       0    0
+proc             /proc         proc    defaults                 0    0
+
+/dev/fd0         /media/floppy auto    noauto,rw,sync,user,exec 0    0
+/dev/cdrom       /media/cdrom  iso9660 noauto,ro,user,exec      0    0
+
+/dev/sda4         /tmp          ext3    rw,nosuid,nodev          0    2
+/dev/sda7         /var          ext3    rw,nosuid,nodev          0    2
+/dev/sda8         /usr          ext3    rw,nodev                 0    2
+/dev/sda9         /home         ext3    rw,nosuid,nodev          0    2
+" >> /etc/fstab
+
